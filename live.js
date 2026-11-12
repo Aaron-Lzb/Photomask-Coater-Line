@@ -6,20 +6,20 @@ const ease=v=>{v=clamp(v);return v*v*(3-2*v)};
 const lerp=(a,b,t)=>a+(b-a)*ease(t);
 const byId=Object.fromEntries(STATIONS.map(s=>[s.id,s]));
 const STEPS=[
-{id:'ld',title:'LD/ULD · 装载',duration:14,description:'背面四角承托：垂直 → 75° → 水平；保持水平后由 RGV 取出。'},
+{id:'ld',title:'LD/ULD · 装载',duration:14,description:'背面四角承托：90° → 75° → 水平，RGV 取出。'},
 {id:'dhp',title:'DHP/CP · 脱水烘烤与冷却',duration:30,description:'下层 DHP 脱水烘烤 → RGV 取出、升层 → 上层 CP 冷却。'},
-{id:'coater',title:'Coater · Spin Coating + Dry Step',duration:30,description:'旋转涂布：PR 从外缘向中心覆盖，圆形未覆盖区归零；随后在 Coater 内常温预干燥。'},
+{id:'coater',title:'Coater · Spin Coating + Dry Step',duration:30,description:'旋转涂布 → 低速旋转 Dry Step（参考 3–6 RPM）→ 停止 → RGV 取出。'},
 {id:'ebr',title:'EBR · 两轮边缘除胶',duration:30,description:'左右同时除胶 → 顺时针 90° → 另外两边除胶 → 逆时针 90° 恢复原向。'},
 {id:'hp',title:'HP/CP · Soft Bake 与冷却',duration:30,description:'下层 HP 加热烘烤 → RGV 取出、升层 → 上层 CP 冷却。'},
-{id:'ld',title:'LD/ULD · 卸载',duration:14,description:'RGV 在水平姿态放回 Mask，四角承托后可切换至 75° 与垂直姿态。'}];
+{id:'ld',title:'LD/ULD · 卸载',duration:14,description:'RGV 水平放回，四角承托后翻转至 75°、90°。'}];
 let total=0;STEPS.forEach(s=>{s.start=total;total+=s.duration});
 const INFO={
-ld:['LD / ULD','装载 / 卸载','无外部框架。左右两侧可变 size arm 从 Mask 背面托住四角，可在垂直 90°、倾斜 75°、水平 0° 之间翻转；RGV 取放时必须为水平。','size arm 以套接结构表示可调间距。四角支撑与姿态来自补充要求，翻转驱动和 RGV 机构为简化示意。'],
-dhp:['DHP / CP','Dehydration Bake / Cooling','下层 DHP 去除玻璃表面水分；加热后由 RGV 取出、收回、升层并放入上层 CP，冷却后再转运。','两层 Chamber：下层 DHP、上层 CP。层间取放与升降由 RGV 简化示意，非设备机械设计图。'],
-coater:['Coater','Spin Coating / 旋转涂布','矩形 Mask 在旋转 Chuck 上涂布。按提供的覆盖逻辑，PR 从边缘向中心覆盖，圆形未覆盖区域逐渐缩小至归零；随后 Mask 留在 Coater 内进行 Dry Step，常温下部分溶剂挥发。','覆盖前沿按用户提供的工艺逻辑示意，不表示液体离心流动方向。Dry Step 为常温预干燥，区别于后续 HP 加热。'],
-ebr:['EBR','Edge Bead Removal / 边缘除胶','先同时去除左右两边边缘胶，Mask 顺时针旋转 90°，再去除另外两边；完成后逆时针旋转 90° 恢复原向，再由 RGV 取出。','亮色作用带仅表示两侧同时处理，不认定喷嘴内部结构。角点圆点为方向标记，顺/逆时针按从 Mask 正面俯视定义。'],
-hp:['HP / CP','Soft Bake / Cooling','EBR 后先进入下层 HP 加热烘烤，随后由 RGV 转移至上层 CP 冷却，冷却完成后送回装卸位。','两层 Chamber：下层 HP、上层 CP。加热烘烤与 Coater 内的常温 Dry Step 分开表现。'],
-stocker:['Mask Stocker','辅助存储区','用于 Mask 的辅助存储。按参考图位于上方右侧；本次六步主流程不经过该工位。','槽位数量及机柜细节为示意，不代表实际设备配置。']};
+ld:['LD / ULD','装载 / 卸载','两侧 Arm 从背面托住四角，支持 90°、75°、0° 姿态；RGV 水平取放。','无外框；Arm 套接与翻转驱动为示意。'],
+dhp:['DHP / CP','脱水烘烤 / 冷却','下层 DHP 去除表面水分；RGV 收回、升层，送入上层 CP 冷却。','下层加热，上层冷却；层间搬运由 RGV 完成。'],
+coater:['Coater','旋转涂布 / Spin Coating','矩形 Mask 在 Chuck 上旋转涂布，PR 从外缘覆盖至中心。随后留在 Chamber 内，以约 3–6 RPM 低速旋转预干燥；部分溶剂挥发后，停止旋转，由 RGV 取出。','Dry Step 不属于 HP 加热。转速为工艺参考；覆盖前沿为示意，不代表离心流向。'],
+ebr:['EBR','边缘除胶 / Edge Bead Removal','左右两边同时除胶 → 顺时针 90° → 另外两边除胶 → 逆时针 90° 回位 → RGV 取出。','作用带为示意；角点标记方向，旋向按 Mask 正面俯视定义。'],
+hp:['HP / CP','加热烘烤 / Soft Bake','EBR 后进入下层 HP 烘烤，再由 RGV 送入上层 CP 冷却，最后返回装卸位。','下层加热，上层冷却；区别于 Coater 内的 Dry Step。'],
+stocker:['Mask Stocker','辅助存储','辅助存放 Mask，不进入六步主流程。','槽位与机柜细节为示意。']};
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let time=0,playing=false,selected=null,modal=null,modalTime=0,modalPlaying=false,resumeLine=false,last=0,inView=true;
 let prevStamp='',inspectStamp='';
@@ -28,7 +28,15 @@ $('.timeline').innerHTML=STEPS.map((s,i)=>`<button class="step" data-step="${i}"
 const LOW=57.5,UPPER=146.3,CARRY=66;
 const ZEMPTY=z=>z-6, ZFORK=z=>z-3.5;
 const THERMALS=['dhp','hp'],DETAILS=['ld','coater','ebr','dhp','hp'];
-function coatingAt(p){const coat=ease(p/.62);return {coat,angle:2160*ease(p/.65),dry:p>=.68,holeRadius:29*(1-coat)}}
+function coatingAt(p){
+ p=clamp(p);const coat=ease(p/.62),dryStart=.68,stopStart=.96,finish=2520;
+ // Main process: 21 visual seconds. 27 degrees/s illustrates 4.5 RPM; local playback shares this curve.
+ const lowSlope=27*21,spinEnd=finish-lowSlope*(stopStart-dryStart+(1-stopStart)/2);
+ let angle;if(p<dryStart){const q=p/dryStart;angle=spinEnd*ease(q)+lowSlope*dryStart*(q*q*q-q*q);}
+ else if(p<stopStart)angle=spinEnd+lowSlope*(p-dryStart);
+ else{const q=(p-stopStart)/(1-stopStart);angle=finish-lowSlope*(1-stopStart)/2*(1-q)*(1-q);}
+ return {coat,angle,dry:p>=dryStart&&p<stopStart,holeRadius:29*(1-coat)};
+}
 function ebrAt(p){
  const ebrA=ease((p-.08)/.24),ebrB=ease((p-.46)/.26);
  const angle=p<.32?0:p<.46?90*ease((p-.32)/.14):p<.72?90:p<.86?90*(1-ease((p-.72)/.14)):0;
@@ -87,11 +95,11 @@ function stateAt(t){
   else{st.onRobot=true;st.my=0;st.mz=UPPER+8.5;st.fz=ZFORK(st.mz);st.phase='RGV 收回 · 保持 CP 高度等待转运';}
  }else if(local<step.duration-4){
   st.processing=true;st.p=clamp((local-5)/(step.duration-9));
-  if(i===2){Object.assign(st,coatingAt(st.p));st.phase=st.p<.12?'Spin Coating · PR 从外缘开始覆盖':st.p<.62?'旋转涂布 · 圆形未覆盖区缩小':st.p<.68?'PR 覆盖完成 · 圆形区域归零':'Dry Step · 常温静置预干燥';}
+  if(i===2){Object.assign(st,coatingAt(st.p));st.phase=st.p<.12?'Spin Coating · PR 从外缘开始覆盖':st.p<.62?'旋转涂布 · 圆形未覆盖区缩小':st.p<.68?'PR 覆盖完成 · 减速进入 Dry Step':st.p<.96?'Dry Step · 低速旋转预干燥':'预干燥结束 · 减速停止';}
   if(i===3){Object.assign(st,ebrAt(st.p));st.phase=st.p<.08?'定位 · 准备第一轮除胶':st.ebrPhase==='round1'?'第一轮 · 左右两边同时除胶':st.ebrPhase==='cw90'?'Mask 顺时针旋转 90°':st.ebrPhase==='round2'?'第二轮 · 另外两边同时除胶':st.ebrPhase==='ccw90'?'Mask 逆时针旋转 90°':'恢复原向 · 等待 RGV 取出';}
  }else{pickup(local-(step.duration-4),LOW);st.coat=i>=2?1:0;st.edge=i>=3?1:0;}
  if(i===1)st.status=local<5?'未处理 · 转运至 DHP':local<11?'脱水烘烤中':local<20?'脱水烘烤后':local<25?'脱水后 · CP 冷却中':'脱水后 · 冷却完成';
- else if(i===2)st.status=local<5?'脱水后 · 冷却完成':local>=26?'涂胶完成 · 预干燥后':st.dry?'涂胶完成 · Dry Step':st.coat>=1?'涂胶完成':st.coat>0?'PR 覆盖中':'脱水后 · 冷却完成';
+ else if(i===2)st.status=local<5?'脱水后 · 冷却完成':local>=26?'涂胶完成 · 预干燥后':st.dry?'Dry Step · 低速旋转（参考 3–6 RPM）':st.p>=.96?'预干燥完成 · 减速停止':st.coat>=1?'涂胶完成':st.coat>0?'PR 覆盖中':'脱水后 · 冷却完成';
  else if(i===3)st.status=st.edge===1?'EBR 完成':st.edge>0?'边缘除胶中':'涂胶完成 · 预干燥后';
  else if(i===4)st.status=local<5?'EBR 完成':local<11?'HP 加热烘烤中':local<20?'Bake 完成':local<25?'Bake 后 · CP 冷却中':'Bake 后 · 冷却完成';
  else if(i===5)st.status='最终冷却完成 · 待卸载';
@@ -149,8 +157,8 @@ function processEffects(id,p,x,y,z,P,scale=1,mode=null){
  if(id==='ebr'){const e=ebrAt(p);if(e.ebrRound){const half=e.ebrRound===1?38:30,reach=e.ebrRound===1?30:38;out+=`<g data-ebr-round="${e.ebrRound}" transform="${topMatrix([x,y],z+.2,P)}">${[-1,1].map(side=>`<rect x="${side*half-2}" y="${-reach}" width="4" height="${reach*2}" rx="1" fill="#35acb6" opacity=".65"/>`).join('')}</g>`;}}else if(id==='coater'&&p<.2){
   const a=Math.sin(Math.PI*clamp(p/.2));
   for(let j=0;j<4;j++){const yy=j<2?-27:27,xx=j%2?-34:34,q=(p*12+j/4)%1,pos=pt(x+xx,y+yy,z+22*(1-q));out+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="2.3" fill="#9c73c9" opacity="${a}"/>`;}
- }else if((id==='coater'&&p>=.68)||mode==='heat'){
-  const dry=id==='coater',q=dry?(p-.68)/.32:p,color=dry?'#8a91a5':'#dc9a52';
+ }else if((id==='coater'&&p>=.68&&p<.96)||mode==='heat'){
+  const dry=id==='coater',q=dry?(p-.68)/.28:p,color=dry?'#8a91a5':'#dc9a52';
   for(let j=0;j<8;j++){const v=(q*2+j/8)%1,pos=pt(x+(j%3-1)*22,y+(Math.floor(j/3)-1)*17,z+v*32);out+=`<ellipse cx="${pos[0]}" cy="${pos[1]}" rx="1.7" ry="3.3" fill="${color}" opacity="${Math.sin(Math.PI*v)*.55}"/>`;}
  }else if(mode==='cool'){
   for(let j=0;j<8;j++){const v=(p*2+j/8)%1,pos=pt(x+(j%3-1)*22,y+(Math.floor(j/3)-1)*17,z+(1-v)*28);out+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="1.9" fill="#54a9c3" opacity="${Math.sin(Math.PI*v)*.65}"/>`;}
@@ -223,7 +231,7 @@ function miniPicture(id,st){
 }
 function setInspection(st){
  const id=selected||st.id,info=INFO[id],stamp=id+'|'+Boolean(selected);
- if(stamp!==inspectStamp){inspectStamp=stamp;$('#inspect-title').textContent=info[0];$('#inspect-cn').textContent=info[1];$('#inspect-description').textContent=info[2];$('#inspect-note').textContent=info[3];$('#inspector-mode').textContent=selected?'STATION GUIDE / 工位说明':'CURRENT STATION / 当前工位';$('#browse-note').classList.toggle('hidden',!selected);$('#inspect-action').textContent=DETAILS.includes(id)?'↗ 放大并播放工作原理':'↩ 跟随当前工位';}
+ if(stamp!==inspectStamp){inspectStamp=stamp;$('#inspect-title').textContent=info[0];$('#inspect-cn').textContent=info[1];$('#inspect-description').textContent=info[2];$('#inspect-note').textContent=info[3];$('#inspector-mode').textContent=selected?'STATION GUIDE / 工位原理':'CURRENT STATION / 当前工位';$('#browse-note').classList.toggle('hidden',!selected);$('#inspect-action').textContent=DETAILS.includes(id)?'↗ 查看局部原理':'↩ 跟随当前工位';}
  $('#mini').innerHTML=miniPicture(id,st);
 }
 function draw(){
@@ -234,7 +242,7 @@ function draw(){
  ui.effects.innerHTML=st.processing?processEffects(st.id,st.p,st.mx,st.my,st.mz,LINE_P,1,st.thermalMode):'';
  const s=byId[st.id];ui.thermal.innerHTML=st.processing&&THERMALS.includes(st.id)?`<path d="${planOutline({x:s.x-46,y:s.y-37,w:92,d:74,r:1},st.mz-1.4,LINE_P)}" fill="${st.thermalMode==='heat'?'#e8a253':'#64b5ce'}" opacity=".38"/>`:'';
  $('#chamber-labels').innerHTML=THERMALS.map(id=>{const q=byId[id];return chip(LINE_P,[q.x+74,q.y+42,UPPER+6],'上层 CP',st.id===id&&st.chamber==='upper','#409ebc')+chip(LINE_P,[q.x+74,q.y+42,LOW+6],'下层 '+(id==='dhp'?'DHP':'HP'),st.id===id&&st.chamber==='lower','#cf9150')}).join('');
- $('#mask-state').textContent=st.status;$('#inspect-current').textContent=(selected&&selected!==st.id)?'当前处理：该工位待机':'当前处理：'+st.phase;
+ $('#mask-state').textContent=st.status;$('#inspect-current').textContent=(selected&&selected!==st.id)?'主流程：该工位待机':'主流程：'+st.phase;
  all('.station-label').forEach(el=>{el.classList.toggle('active',el.dataset.station===st.id);el.classList.toggle('selected',el.dataset.station===selected)});
  all('.station-glow').forEach(el=>el.classList.toggle('active',el.id==='glow-'+st.id));
  all('.step').forEach((el,i)=>{el.classList.toggle('active',i===st.i);el.setAttribute('aria-current',i===st.i?'step':'false');el.querySelector('.progress').style.transform=`scaleX(${clamp((time-STEPS[i].start)/STEPS[i].duration)})`;});
@@ -253,15 +261,15 @@ function choose(id){selected=id;draw();if(DETAILS.includes(id))openDetail(id);}
 all('[data-station]').forEach(el=>{el.addEventListener('click',()=>choose(el.dataset.station));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(el.dataset.station)}})});
 all('[data-device]').forEach(el=>{if(byId[el.dataset.device]){el.style.cursor='pointer';el.addEventListener('click',()=>choose(el.dataset.device))}});
 $('#inspect-action').addEventListener('click',()=>{const id=selected||stateAt(time).id;if(DETAILS.includes(id))openDetail(id);else{selected=null;draw()}});
-const SEQUENCES={coater:['外缘开始覆盖','圆形区域缩小','圆形区域归零','Dry Step · 常温预干燥'],ebr:['左右两边同时除胶','顺时针 90°','另外两边除胶','逆时针 90°','原向恢复 · 待取出'],ld:['垂直 90°','倾斜 75°','水平 0°','RGV 水平取出','RGV 水平放回','交接后翻转'],dhp:['下层 DHP 加热','RGV 取出并升层','上层 CP 冷却','冷却完成取回'],hp:['下层 HP 加热','RGV 取出并升层','上层 CP 冷却','冷却完成取回']};
+const SEQUENCES={coater:['外缘开始覆盖','圆形区域缩小','圆形区域归零','Dry Step · 低速旋转预干燥','减速停止 · 等待取片'],ebr:['左右两边同时除胶','顺时针 90°','另外两边除胶','逆时针 90°','原向恢复 · 待取出'],ld:['垂直 90°','倾斜 75°','水平 0°','RGV 水平取出','RGV 水平放回','交接后翻转'],dhp:['下层 DHP 加热','RGV 取出并升层','上层 CP 冷却','冷却完成取回'],hp:['下层 HP 加热','RGV 取出并升层','上层 CP 冷却','冷却完成取回']};
 const detailDuration=id=>id==='ld'?28:THERMALS.includes(id)?25:18;
-const detailPhase=(id,p)=>id==='ld'?(p*28<1.5?0:p*28<3.5?1:p*28<6?2:p*28<14?3:p*28<20?4:5):THERMALS.includes(id)?(p<6/25?0:p<15/25?1:p<20/25?2:3):id==='coater'?(p<.12?0:p<.62?1:p<.68?2:3):(p<.32?0:p<.46?1:p<.72?2:p<.86?3:4);
-function openDetail(id){resumeLine=playing;playing=false;modal=id;const current=stateAt(time);modalTime=current.id!==id?0:id==='ld'?(current.i===5?14:0)+current.t:THERMALS.includes(id)?clamp(current.t-5,0,25):current.processing?current.p*detailDuration(id):current.t>=STEPS[current.i].duration-4?detailDuration(id):0;modalPlaying=!reduced.matches;$('#detail .eyebrow').textContent=THERMALS.includes(id)?'CHAMBER SECTION / 两层腔室剖视':'PROCESS CLOSE-UP / 局部工作原理';$('#detail-title').textContent=INFO[id][0]+' · '+INFO[id][1];$('#detail-description').textContent=INFO[id][2]+' '+INFO[id][3];$('#detail-sequence').innerHTML=SEQUENCES[id].map(x=>`<span>${x}</span>`).join('');$('#detail').showModal();draw();drawDetail();}
+const detailPhase=(id,p)=>id==='ld'?(p*28<1.5?0:p*28<3.5?1:p*28<6?2:p*28<14?3:p*28<20?4:5):THERMALS.includes(id)?(p<6/25?0:p<15/25?1:p<20/25?2:3):id==='coater'?(p<.12?0:p<.62?1:p<.68?2:p<.96?3:4):(p<.32?0:p<.46?1:p<.72?2:p<.86?3:4);
+function openDetail(id){resumeLine=playing;playing=false;modal=id;const current=stateAt(time);modalTime=current.id!==id?0:id==='ld'?(current.i===5?14:0)+current.t:THERMALS.includes(id)?clamp(current.t-5,0,25):current.processing?current.p*detailDuration(id):current.t>=STEPS[current.i].duration-4?detailDuration(id):0;modalPlaying=!reduced.matches;$('#detail .eyebrow').textContent=THERMALS.includes(id)?'CHAMBER / 两层腔室原理':'PROCESS / 局部工艺原理';$('#detail-title').textContent=INFO[id][0]+' · '+INFO[id][1];$('#detail-description').textContent=INFO[id][2]+' '+INFO[id][3];$('#detail-sequence').innerHTML=SEQUENCES[id].map(x=>`<span>${x}</span>`).join('');$('#detail').showModal();draw();drawDetail();}
 function closeDetail(){if(!modal)return;modal=null;$('#detail').close();playing=resumeLine&&!reduced.matches;selected=null;draw()}
 $('#close-detail').addEventListener('click',closeDetail);$('#detail').addEventListener('cancel',e=>{e.preventDefault();closeDetail()});
 $('#detail-play').addEventListener('click',()=>{if(reduced.matches)modalTime=(modalTime+2)%(detailDuration(modal)+2);else modalPlaying=!modalPlaying;drawDetail()});
-function drawDetail(){if(!modal)return;const p=clamp(modalTime/detailDuration(modal));$('#detail-svg').innerHTML=processPicture(modal,p,detailP,'detail',true);const phase=detailPhase(modal,p);all('#detail-sequence span').forEach((el,i)=>el.classList.toggle('on',i===phase));$('#detail-phase').textContent=modal==='ld'?(p>=.5&&p*28-14<6?'RGV 水平放回 · 机构保持 0°':ldDetailModel(p).phase):SEQUENCES[modal][phase];$('#detail-play').textContent=reduced.matches?'推进局部示意':modalPlaying?'Ⅱ 暂停局部动画':'▶ 播放局部动画';}
-function motionSetting(){if(reduced.matches){playing=false;modalPlaying=false;$('#motion-tip').textContent='已启用减少动态效果：播放按钮分段推进，可逐步查看；节奏不代表工艺时间。'}else $('#motion-tip').textContent='Space 播放 / 暂停 · ← → 切换步骤 · 动画节奏不代表实际工艺时间';draw();}
+function drawDetail(){if(!modal)return;const p=clamp(modalTime/detailDuration(modal));$('#detail-svg').innerHTML=processPicture(modal,p,detailP,'detail',true);const phase=detailPhase(modal,p);all('#detail-sequence span').forEach((el,i)=>el.classList.toggle('on',i===phase));$('#detail-phase').textContent=modal==='ld'?(p>=.5&&p*28-14<6?'RGV 水平放回 · 机构保持 0°':ldDetailModel(p).phase):SEQUENCES[modal][phase];$('#detail-play').textContent=reduced.matches?'推进局部':modalPlaying?'Ⅱ 暂停局部':'▶ 播放局部';}
+function motionSetting(){if(reduced.matches){playing=false;modalPlaying=false;$('#motion-tip').textContent='减少动态：播放按钮分段推进。'}else $('#motion-tip').textContent='Space 播放/暂停 · ← → 切换步骤';draw();}
 reduced.addEventListener('change',motionSetting);
 document.addEventListener('keydown',e=>{if(modal){if(e.key==='Escape'){e.preventDefault();closeDetail()}return;}if(e.code==='Space'&&!e.target.closest('button,[role="button"]')){e.preventDefault();toggle()}else if(e.key==='ArrowRight'){e.preventDefault();jump(stateAt(time).i+1)}else if(e.key==='ArrowLeft'){e.preventDefault();jump(stateAt(time).i-1)}});
 new IntersectionObserver(entries=>{inView=entries.at(-1).isIntersecting}).observe($('.workspace'));
